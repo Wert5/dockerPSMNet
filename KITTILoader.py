@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import random
 from PIL import Image, ImageOps
 import numpy as np
-from dataloader import preprocess 
+from dataloader import preprocess
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -25,7 +25,7 @@ def disparity_loader(path):
 
 class myImageFloder(data.Dataset):
     def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader= disparity_loader):
- 
+
         self.left = left
         self.right = right
         self.disp_L = left_disparity
@@ -40,13 +40,14 @@ class myImageFloder(data.Dataset):
 
         left_img = self.loader(left)
         right_img = self.loader(right)
+
         dataL = self.dploader(disp_L)
 
 
-        if self.training:  
+        if self.training:
            w, h = left_img.size
            th, tw = 256, 512
- 
+
            x1 = random.randint(0, w - tw)
            y1 = random.randint(0, h - th)
 
@@ -56,14 +57,15 @@ class myImageFloder(data.Dataset):
            dataL = np.ascontiguousarray(dataL,dtype=np.float32)/256
            dataL = dataL[y1:y1 + th, x1:x1 + tw]
 
-           processed = preprocess.get_transform(augment=False)  
+           processed = preprocess.get_transform(augment=False)
            left_img   = processed(left_img)
            right_img  = processed(right_img)
 
-           return left_img, right_img, dataL
+
+           return left, right, disp_L, left_img, right_img, dataL
         else:
            w, h = left_img.size
-
+           #print("Left image size",w,h)
            left_img = left_img.crop((w-1232, h-368, w, h))
            right_img = right_img.crop((w-1232, h-368, w, h))
            w1, h1 = left_img.size
@@ -71,12 +73,12 @@ class myImageFloder(data.Dataset):
            dataL = dataL.crop((w-1232, h-368, w, h))
            dataL = np.ascontiguousarray(dataL,dtype=np.float32)/256
 
-           processed = preprocess.get_transform(augment=False)  
+           processed = preprocess.get_transform(augment=False)
            left_img       = processed(left_img)
            right_img      = processed(right_img)
 
-           return left_img, right_img, dataL
+
+           return left, right, disp_L, left_img, right_img, dataL
 
     def __len__(self):
         return len(self.left)
-
